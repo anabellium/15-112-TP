@@ -13,18 +13,23 @@ class MC:
         self.width = 50
         self.height = 75
 
-        self.image = image
-
         self.hp = 100
         self.attacking = False
     
-    def draw(self, app, sprites, counter, other):
+    def draw(self, app, sprites, flippedSprites, counter, other):
         sprite = sprites[counter]
+        flippedSprite = flippedSprites[counter]
 
-        # if self.dx < 0:
-        #     sprite = sprite.transpose(Image.FLIP_LEFT_RIGHT)
+        if self.dx == 0:
+            drawImage(sprites[1], self.xpos - self.width/2, self.ypos-self.height/2, 
+                  width=self.width, height=self.height)    
 
-        drawImage(sprite, self.xpos - self.width/2, self.ypos-self.height/2, 
+        elif self.dx < 0:
+            drawImage(flippedSprite, self.xpos - self.width/2, self.ypos-self.height/2, 
+                  width=self.width, height=self.height)    
+
+        else:
+            drawImage(sprite, self.xpos - self.width/2, self.ypos-self.height/2, 
                   width=self.width, height=self.height)    
         #lasers
         if self.attacking:
@@ -112,13 +117,21 @@ def onAppStart(app):
     app.width = 1000
     app.height = 500
     #make mc sprite
-    mcstrip = openImage(r'spritestrip.png')
+    mcstrip = openImage(r'spritestrip.png')  
+    mcflippedStrip = openImage(r'spritestrip.png')  
+    mcflippedStrip = mcstrip.transpose(Image.FLIP_LEFT_RIGHT)
+    
+    app.mcflippedSprites = []
     app.mcsprites = []
     for i in range(6):
         mcFrame = CMUImage(mcstrip.crop((30+260*i, 30, 230+260*i, 250)))
         app.mcsprites.append(mcFrame)
 
+        mcflippedFrame = CMUImage(mcflippedStrip.crop((30+260*i, 30, 230+260*i, 250)))
+        app.mcflippedSprites.append(mcflippedFrame)
+
     app.mc = MC(app.width/2, app.height/2, app.mcsprites)
+
 
     #make boys
     app.allBoys = list() 
@@ -175,7 +188,8 @@ def redrawAll(app):
 
     # draw mc
     app.mc.xpos -= app.scrollX # <-- scrolling the mc
-    app.mc.draw(app, app.mcsprites, app.spriteCounter, app.allBoys[app.selectedBoy])
+    app.mc.draw(app, app.mcsprites, app.mcflippedSprites, app.spriteCounter,
+                 app.allBoys[app.selectedBoy])
 
 def onStep(app):
     app.spriteCounter = (1 + app.spriteCounter) % len(app.mcsprites)
@@ -227,11 +241,13 @@ def onKeyHold(app, keys):
         app.mc.dx = -5
         app.mc.walking(app)
         app.scrollX = -5
-
+    
 def onKeyRelease(app, key):
     if key == 'd':
+        app.mc.dx = 0
         app.scrollX = 0
     elif key == 'a':
+        app.mc.dx = 0
         app.scrollX = 0
 
 '''all helper functions here'''
