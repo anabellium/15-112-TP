@@ -10,8 +10,8 @@ class MC:
         self.xpos = xpos
         self.ypos = ypos
         self.dx = 0
-        self.width = 50
-        self.height = 75
+        self.width = 65
+        self.height = 130
 
         self.hp = 100
         self.attacking = False
@@ -25,15 +25,15 @@ class MC:
                   width=self.width, height=self.height)    
 
         elif self.dx < 0:
-            drawImage(flippedSprite, self.xpos - self.width/2, self.ypos-self.height/2, 
+            drawImage(sprite, self.xpos - self.width/2, self.ypos-self.height/2, 
                   width=self.width, height=self.height)    
 
         else:
-            drawImage(sprite, self.xpos - self.width/2, self.ypos-self.height/2, 
+            drawImage(flippedSprite, self.xpos - self.width/2, self.ypos-self.height/2, 
                   width=self.width, height=self.height)    
         #lasers
         if self.attacking:
-            drawLine(self.xpos, self.ypos, other.xpos, other.ypos, fill = 'red')
+            drawLine(self.xpos+10, self.ypos-50, other.xpos, other.ypos-50, fill = 'red')
     
     def walking(self, app):
         self.xpos += self.dx
@@ -43,8 +43,8 @@ class Boy:
         self.initx = xpos
         self.xpos = xpos
         self.ypos = ypos
-        self.width = 25
-        self.height = 50
+        self.width = 75
+        self.height = 150
         self.dx = random.randint(1, 3)
         self.range = random.randint(30, 50)
 
@@ -52,17 +52,23 @@ class Boy:
         self.follow = False
         self.beingAttacked = False
     
-    def draw(self, app, other):
+    def draw(self, app, sprites, flippedSprites, counter, other):
         #draws boy
+        sprite = sprites[counter]
+        flippedSprite = flippedSprites[counter]
+
         if not self.follow:
-            drawRect(self.xpos, self.ypos, self.width, self.height, fill = 'blue', align = 'center')
-            drawLabel('boy: ' + str(self.hp), self.xpos, self.ypos)
+            if self.dx < 0:
+                drawImage(flippedSprite, self.xpos - self.width/2, self.ypos-self.height/2, 
+                    width=self.width, height=self.height)    
+
+            else:
+                drawImage(sprite, self.xpos - self.width/2, self.ypos-self.height/2, 
+                  width=self.width, height=self.height)  
 
         else:
             #other is MC
-            drawRect(other.xpos + 10, other.ypos, self.width, self.height, 
-                     fill = 'blue', align = 'center')
-            drawLabel('boy: ' + str(self.hp), other.xpos, other.ypos)
+            drawImage(sprites[1], other.xpos + 10, other.ypos, self.width, self.height)
 
     def wander(self, app, other):
         if not self.follow:
@@ -84,19 +90,26 @@ class Rival:
         self.initx = xpos
         self.xpos = xpos
         self.ypos = ypos
-        self.width = 25
-        self.height = 50
+        self.width = 75
+        self.height = 150
         self.dx = random.randint(1, 3)
         self.range = random.randint(30, 50)
 
         self.hp = 100
         self.attacking = False
     
-    def draw(self, app, other):
+    def draw(self, app, sprites, flippedSprites, counter, other):
         #draws rival
-        drawRect(self.xpos, self.ypos, self.width, self.height, 
-                 fill = 'magenta', align = 'center')
-        drawLabel('rival: ' + str(self.hp), self.xpos, self.ypos)
+        sprite = sprites[counter]
+        flippedSprite = flippedSprites[counter]
+
+        if self.dx < 0:
+            drawImage(flippedSprite, self.xpos - self.width/2, self.ypos-self.height/2, 
+                width=self.width, height=self.height)    
+
+        else:
+            drawImage(sprite, self.xpos - self.width/2, self.ypos-self.height/2, 
+                width=self.width, height=self.height)  
 
         if self.attacking:
             drawLine(self.xpos, self.ypos, other.xpos, other.ypos, fill = 'magenta')
@@ -116,36 +129,68 @@ class Rival:
 def onAppStart(app):
     app.width = 1000
     app.height = 500
+
+    #load background image
+    app.myBackground = openImage(r'background.jpg')  
+    app.myBackground = CMUImage(app.myBackground.crop((0, 488, 728, 488)))
+
     #make mc sprite
-    mcstrip = openImage(r'spritestrip.png')  
-    mcflippedStrip = openImage(r'spritestrip.png')  
+    mcstrip = openImage(r'sprites\mc_sprites\mcspritesheet.png')  
+    mcflippedStrip = openImage(r'sprites\mc_sprites\mcspritesheet.png')  
     mcflippedStrip = mcstrip.transpose(Image.FLIP_LEFT_RIGHT)
     
     app.mcflippedSprites = []
     app.mcsprites = []
     for i in range(6):
-        mcFrame = CMUImage(mcstrip.crop((30+260*i, 30, 230+260*i, 250)))
+        mcFrame = CMUImage(mcstrip.crop((111*i, 0, 111+111*i, 278)))
         app.mcsprites.append(mcFrame)
 
-        mcflippedFrame = CMUImage(mcflippedStrip.crop((30+260*i, 30, 230+260*i, 250)))
+        mcflippedFrame = CMUImage(mcflippedStrip.crop((111*i, 0, 111+111*i, 278)))
         app.mcflippedSprites.append(mcflippedFrame)
 
     app.mc = MC(app.width/2, app.height/2, app.mcsprites)
 
+    #make boy1 sprite
+    boy1strip = openImage(r'sprites\boy1sprites\boy1spritesheet.png')  
+    boy1flippedStrip = openImage(r'sprites\boy1sprites\boy1spritesheet.png')  
+    boy1flippedStrip = boy1strip.transpose(Image.FLIP_LEFT_RIGHT)
+    
+    app.boy1flippedSprites = []
+    app.boy1sprites = []
+    for i in range(23):
+        boy1Frame = CMUImage(boy1strip.crop((236*i, 0, 236+236*i, 470)))
+        app.boy1sprites.append(boy1Frame)
+
+        boy1flippedFrame = CMUImage(boy1flippedStrip.crop((236*i, 0, 236+236*i, 470)))
+        app.boy1flippedSprites.append(boy1flippedFrame)
+
+#make rival4 sprite
+    rival4strip = openImage(r'sprites\rival4sprites\rival4spritesheet.png')  
+    rival4flippedStrip = openImage(r'sprites\rival4sprites\rival4spritesheet.png')  
+    rival4flippedStrip =  rival4strip.transpose(Image.FLIP_LEFT_RIGHT)
+    
+    app. rival4flippedSprites = []
+    app. rival4sprites = []
+    for i in range(16):
+        rival4Frame = CMUImage(rival4strip.crop((100*i, 0, 100+100*i, 278)))
+        app.rival4sprites.append(rival4Frame)
+
+        rival4flippedFrame = CMUImage(rival4flippedStrip.crop((100*i, 0, 100+100*i, 278)))
+        app. rival4flippedSprites.append(rival4flippedFrame)
 
     #make boys
     app.allBoys = list() 
-    app.nboys = 20 #number of boys
+    app.nboys = 10 #number of boys
     for i in range(app.nboys):
         app.allBoys.append(Boy(random.randint(0, 5000), random.randint(0, app.height)))
 
     #make rivals
-    app.allRivals = list() 
-    app.nrivals = 10 #number of boys
+    app.allRivals = list()
+    app.nrivals = 5 #number of rivals
     for i in range(app.nrivals):
         app.allRivals.append(Rival(random.randint(0, 5000), random.randint(0, app.height)))
 
-    #miscellaneous variables
+    #miscellaneous variablesa
     app.spriteCounter = 0
     app.stepsPerSecond = 10
     app.mcX = app.mc.xpos
@@ -156,6 +201,9 @@ def onAppStart(app):
     app.scrollMargin = 50
 
 def redrawAll(app):
+    #draw background
+    # drawImage(app.myBackground, 0, 0, width = 1000, height = 500)
+
     #only displays the boys who are on the screen (sidescrolling)
     displayedBoys = list()
     for i in range(len(app.allBoys)):
@@ -168,7 +216,7 @@ def redrawAll(app):
     #draw + scroll boys on screen
     for i in range(len(displayedBoys)):
         displayedBoys[i].xpos -= app.scrollX
-        displayedBoys[i].draw(app, app.mc)
+        displayedBoys[i].draw(app, app.boy1sprites, app.boy1flippedSprites, app.spriteCounter, app.mc)
         displayedBoys[i].initx -= app.scrollX
 
     #only displays the rivals who are on the screen (sidescrolling)
@@ -184,7 +232,7 @@ def redrawAll(app):
     for i in range(len(displayedRivals)):
         displayedRivals[i].xpos -= app.scrollX
         displayedRivals[i].initx -= app.scrollX
-        displayedRivals[i].draw(app, app.allBoys[app.selectedBoy])
+        displayedRivals[i].draw(app, app.rival4sprites, app.rival4flippedSprites, app.spriteCounter, app.allBoys[app.selectedBoy])
 
     # draw mc
     app.mc.xpos -= app.scrollX # <-- scrolling the mc
@@ -192,7 +240,7 @@ def redrawAll(app):
                  app.allBoys[app.selectedBoy])
 
 def onStep(app):
-    app.spriteCounter = (1 + app.spriteCounter) % len(app.mcsprites)
+    app.spriteCounter = (app.spriteCounter + 1) % len(app.mcsprites) 
 
     for i in range(len(app.allBoys)):
         app.allBoys[i].wander(app, app.mc)
@@ -233,12 +281,12 @@ def onMouseRelease(app, mouseX, mouseY):
 
 def onKeyHold(app, keys):
     if 'd' in keys:
-        app.mc.dx = 5
+        app.mc.dx = 15
         app.mc.walking(app)
         app.scrollX = 5
  
     elif 'a' in keys:
-        app.mc.dx = -5
+        app.mc.dx = -15
         app.mc.walking(app)
         app.scrollX = -5
     
